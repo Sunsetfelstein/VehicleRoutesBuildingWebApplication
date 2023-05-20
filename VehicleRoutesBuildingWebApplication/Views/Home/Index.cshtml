@@ -1,0 +1,240 @@
+﻿@model List<VehicleRoutesBuildingWebApplication.Models.HomeViewModels.PointViewModel>
+@{
+        ViewData["Title"] = "Стартовая страница";
+}
+
+<div id="map" style="width: 1250px; height: 600px"></div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey=a411f927-83b0-4fe6-ba1d-ebce6259b35c&lang=ru_RU"></script>
+
+<script>
+    ymaps.ready(init);
+
+            async function init() {
+                var myPlacemark,
+                map = new ymaps.Map(document.getElementById('map'), {
+                center: [54.735152, 55.958736],
+                zoom: 7
+            });
+
+            map.events.add('click', function (e) {
+                var coords = e.get('coords');
+    
+                // Если метка уже создана – просто передвигаем ее.
+                if (myPlacemark) {
+                    myPlacemark.geometry.setCoordinates(coords);
+                }
+                // Если нет – создаем.
+                else {
+                    myPlacemark = createPlacemark(coords);
+                    map.geoObjects.add(myPlacemark);
+                    // Слушаем событие окончания перетаскивания на метке.
+                    myPlacemark.events.add('dragend', function () {
+                        getAddress(myPlacemark.geometry.getCoordinates());
+                    });
+                }
+                getAddress(coords);
+            });
+    
+            function createPlacemark(coords) {
+                return new ymaps.Placemark(coords, {
+                    iconCaption: 'поиск...'
+                }, {
+                    preset: 'islands#violetDotIconWithCaption',
+                    draggable: true
+                });
+            }
+    
+            function getAddress(coords) {
+                myPlacemark.properties.set('iconCaption', 'поиск...');
+                ymaps.geocode(coords).then(function (res) {
+                    var firstGeoObject = res.geoObjects.get(0),
+                        address = firstGeoObject.getAddressLine();
+                        coord = firstGeoObject.geometry.getCoordinates();
+    
+                    myPlacemark.properties
+                        .set({
+                            // Формируем строку с данными об объекте.
+                            iconCaption: [
+                                // Название населенного пункта или вышестоящее административно-территориальное образование.
+                                firstGeoObject.getLocalities().length ? firstGeoObject.getLocalities() : firstGeoObject.getAdministrativeAreas(),
+                                // Получаем путь до топонима, если метод вернул null, запрашиваем наименование здания.
+                                firstGeoObject.getThoroughfare() || firstGeoObject.getPremise()
+                            ].filter(Boolean).join(', '),
+                            // В качестве контента балуна задаем строку с адресом объекта.
+                            balloonContent: address
+                        });
+                });
+            }
+
+        var points = [];
+    
+        @foreach (var point in Model)
+        {
+            <text>
+                var isDepot = "@point.IsDepot" === "True" ? true : false;
+                var clientMark = new ymaps.Placemark([@point.Location.Coordinate.Latitude.ToString().Replace(',','.'), 
+                @point.Location.Coordinate.Longitude.ToString().Replace(',','.')], {
+                    iconCaption: "@point.Name"
+                }, {
+                preset: isDepot ? 'islands#nightDotIcon' : 'islands#violetDotIconWithCaption',
+                    draggable: true
+                });
+
+                var point = {
+                    Name: "@point.Name",
+                    PhoneNumber: "@point.PhoneNumber",
+                    ProductWeight: @point.ProductWeight,
+                    Latitude: @point.Location.Coordinate.Latitude.ToString().Replace(',','.'),
+                    Longitude: @point.Location.Coordinate.Longitude.ToString().Replace(',','.'),
+                    Mark: clientMark,
+                    IsDepot: isDepot
+                };
+
+                map.geoObjects.add(clientMark);
+                points.push(point);
+            </text>
+        };         
+
+        distribClientsByDepo();
+
+        function containsObject(obj, list) {
+            var i;
+            for (i = 0; i < list.length; i++) {
+                if (list[i] === obj) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        async function distribClientsByDepo(){
+
+            let distanceArray = await fillDistanceArray();
+
+            let depotIndexes = [];
+
+            let depotsWithClients = [];
+
+            for(let i = 0; i < points.length; i++){
+                if(points[i].IsDepot)
+                {
+                    depotIndexes.push(i)
+
+                    var depotWithClients = {
+                    Name: points[i].Name,
+                    Mark: points[i].Mark,
+                    Longitude: points[i].Longitude,
+                    Latitude: points[i].Latitude,
+                    Index: i,
+                    Clients: []
+                    };
+
+                    depotsWithClients.push(depotWithClients);
+                }
+            }
+
+            for(let i = 0; i < points.length; i++)
+            {
+                if (!containsObject(i, depotIndexes)) {
+                    let min = 1000000;
+                    let depotIndex = 0;
+                    for(let j = 0; j < depotsWithClients.length; j++)
+                    {
+                        let distance =  distanceArray[i][depotsWithClients[j].Index];
+                        if(distance < min)
+                        {
+                            min = distance;
+                            depotIndex = j;
+                        }
+                    }
+                    depotsWithClients[depotIndex].Clients.push(points[i]);
+                }
+            }
+
+            createOptimalRoutes(depotsWithClients, distanceArray);
+
+            
+        }
+
+        function createOptimalRoutes(depotsWithClients){
+            let clients = distributeClients(depotsWithClients[2].Clients, 700, depotsWithClients[2]);
+
+        }
+
+        function polarCoordinates(origin, target) {
+            const x = target.x - origin.x;
+            const y = target.y - origin.y;
+            const distance = Math.sqrt(x * x + y * y);
+            let angle = Math.atan2(y, x);
+            if (angle < 0) {
+                angle += 2 * Math.PI;
+            }
+            return { distance, angle };
+        }
+
+        // Функция для распределения клиентов по транспортным средствам
+        function distributeClients(clients, maxCapacity, depot) {
+
+            clients.sort((a, b) => {
+                const aAngle = Math.atan2(a.Longitude - depot.Longitude, a.Latitude - depot.Latitude);
+                const bAngle = Math.atan2(b.Longitude - depot.Longitude, b.Latitude - depot.Latitude);
+                if (aAngle === bAngle) {
+                return Math.hypot(a.Longitude - depot.Longitude, a.Latitude - depot.Latitude) - Math.hypot(b.Longitude - depot.Longitude, b.Latitude - depot.Latitude);
+                }
+                return aAngle - bAngle;
+            });         
+            return clients;
+        }
+
+        function fillDistanceArray() {
+                return new Promise((resolve, reject) => {
+                
+                let distanceArray = []
+
+                for(let i = 0; i < points.length; ++i){
+                    distanceArray.push([])
+                    for(let j = 0; j < points.length; ++j){
+                      distanceArray[i].push(0)
+                    }
+                  }
+
+                let allCount = 0;
+
+                let doneCount = 0;
+            
+                for(let i = 0; i < points.length; i++){
+                    for (let j = i; j < points.length; j++) {
+                        if (i != j){
+                            let multiRoute = new ymaps.multiRouter.MultiRoute({
+                                referencePoints: [points[i].Mark.geometry.getCoordinates(), points[j].Mark.geometry.getCoordinates()],
+                                    params: {
+                                    routingMode: "auto",
+                                    multiRoute: false  
+                                    }
+                                })
+
+                                allCount++;   
+
+                                multiRoute.model.events.add('requestsuccess',() => {
+                                    doneCount++;
+                                    var activeRoute = multiRoute.getActiveRoute();                                
+                                    let val = activeRoute.properties.get("distance").value
+                                    distanceArray[i][j] = val
+                                    distanceArray[j][i] = val
+                                    if(allCount === doneCount)
+                                        resolve(distanceArray)
+                                })                                                    
+                            }
+                        }
+                }
+                })
+                
+            }
+        } 
+
+        
+
+       
+</script>

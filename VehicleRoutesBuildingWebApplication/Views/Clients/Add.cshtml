@@ -1,0 +1,131 @@
+﻿@model VehicleRoutesBuildingWebApplication.Models.ClientsViewModels.AddClientViewModel
+@{
+    ViewData["Title"] = "Создание клиента";
+}
+
+<h1>Добавить клиента</h1>
+<form method="post" action="Add" class="mt-5">
+    <div class="mb-3">
+        <label for="" class="form-label">Имя</label>
+        <input type="text" id="nameBox" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Номер телефона</label>
+        <input type="tel" id="telBox"  class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Вес товара</label>
+        <input type="number" id="weightBox" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Адрес</label>
+        <input type="text" id="adressBox" class="form-control" />
+    </div>
+    <div id="map" style="width: 700px; height: 250px"></div>
+    <button type="submit" id="sendBtn" class="btn btn-primary">Добавить</button>
+</form>
+<script src="https://api-maps.yandex.ru/2.1/?apikey=a411f927-83b0-4fe6-ba1d-ebce6259b35c&lang=ru_RU"></script>
+<script>
+    ymaps.ready(init);
+    function init() {
+        var myInput = document.getElementById("adressBox"),
+            myPlacemark,
+            map = new ymaps.Map(document.getElementById('map'), {
+                center: [54.735152, 55.958736],
+                zoom: 7
+            });
+
+        map.events.add('click', function (e) {
+            var coords = e.get('coords');
+
+            // Если метка уже создана – просто передвигаем ее.
+            if (myPlacemark) {
+                myPlacemark.geometry.setCoordinates(coords);
+            }
+            // Если нет – создаем.
+            else {
+                myPlacemark = createPlacemark(coords);
+                map.geoObjects.add(myPlacemark);
+                // Слушаем событие окончания перетаскивания на метке.
+                myPlacemark.events.add('dragend', function () {
+                    getAddress(myPlacemark.geometry.getCoordinates());
+                });
+            }
+            getAddress(coords);
+        });
+
+        function createPlacemark(coords) {
+            return new ymaps.Placemark(coords, {
+                iconCaption: 'поиск...'
+            }, {
+                preset: 'islands#violetDotIconWithCaption',
+                draggable: true
+            });
+        }
+
+        function getAddress(coords) {
+            myPlacemark.properties.set('iconCaption', 'поиск...');
+            ymaps.geocode(coords).then(function (res) {
+                var firstGeoObject = res.geoObjects.get(0),
+                    address = firstGeoObject.getAddressLine();
+                coord = firstGeoObject.geometry.getCoordinates();
+
+                myPlacemark.properties
+                    .set({
+                        // Формируем строку с данными об объекте.
+                        iconCaption: [
+                            // Название населенного пункта или вышестоящее административно-территориальное образование.
+                            firstGeoObject.getLocalities().length ? firstGeoObject.getLocalities() : firstGeoObject.getAdministrativeAreas(),
+                            // Получаем путь до топонима, если метод вернул null, запрашиваем наименование здания.
+                            firstGeoObject.getThoroughfare() || firstGeoObject.getPremise()
+                        ].filter(Boolean).join(', '),
+                        // В качестве контента балуна задаем строку с адресом объекта.
+                        balloonContent: address
+                    });
+                myInput.value = address;
+                localStorage.setItem('address', address); // При вызове функции (которая срабатываем при нажатии на карте) записываем данные в localstorage
+                localStorage.setItem('coord', coord)
+            });
+        }
+
+        if (localStorage.getItem('address')) { // При выполнении функции init, если есть данные в localstorage, то...
+            myInput.value = localStorage.getItem('address'); // Вставляем значение в input
+        } 
+
+        document.getElementById('sendBtn').addEventListener('click', sendInformation);
+
+        async function sendInformation() {
+            var name = document.getElementById("nameBox");
+            var tel = document.getElementById("telBox");
+            var weight = document.getElementById("weightBox");
+
+            let clientLocation = {
+                Name: name.value,
+                PhoneNumber: tel.value,
+                Coordinates: localStorage.getItem('coord'),
+                Adress: localStorage.getItem('address'),
+                ProductWeight: weight.value
+            };
+
+            const response = await fetch("/Clients/Add", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                    Coordinates: clientLocation.Coordinates,
+                    Adress: clientLocation.Adress,
+                    Name: clientLocation.Name,
+                    PhoneNumber: clientLocation.PhoneNumber,
+                    ProductWeight: clientLocation.ProductWeight
+                })
+            })
+                .then(response => response.json())
+                .then(result => {
+                    window.location.href = result.redirectToUrl;
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке формы:', error);
+                });
+
+        };
+    }
+</script>

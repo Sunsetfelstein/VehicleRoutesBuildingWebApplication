@@ -1,0 +1,29 @@
+﻿@model List<VehicleRoutesBuildingWebApplication.Models.Domain.Vehicle>
+@{
+    ViewData["Title"] = "Список транспортных средств";
+}
+
+<h1>Транспортные средства</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Модель</th>
+            <th>Грузоподъемность</th>
+            <th>Расход топлива</th>
+            <th> </th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var vehicle in Model)
+        {
+            <tr>
+                <td>@vehicle.Name</td>
+                <td>@vehicle.Capacity</td>
+                <td>@vehicle.FuelConsumption</td>
+                <td> <a href="Vehicles/Delete/@vehicle.Id">Удалить</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

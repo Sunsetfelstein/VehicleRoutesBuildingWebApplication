@@ -1,0 +1,22 @@
+﻿@model VehicleRoutesBuildingWebApplication.Models.VehicleViewModels.AddVehicleViewModel
+@{
+    ViewData["Title"] = "Создание транспортных средств";
+}
+
+<h1>Добавить транспортное средство</h1>
+<form method="post" action="Add" class="mt-5">
+    <div class="mb-3">
+        <label for="" class="form-label">Имя</label>
+        <input type="text" id="nameBox" class="form-control" asp-for="Name" />
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Грузоподъемность</label>
+        <input type="number" id="capacityBox" class="form-control" asp-for="Capacity" />
+    </div>
+    <div class="mb-3">
+        <label for="" class="form-label">Расход топлива</label>
+        <input type="number" id="fuelConsumptionBox" class="form-control" asp-for="FuelConsumption" />
+    </div>
+    <div id="map" style="width: 700px; height: 250px"></div>
+    <button type="submit" id="sendBtn" class="btn btn-primary">Добавить</button>
+</form>

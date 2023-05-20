@@ -1,0 +1,27 @@
+﻿@model List<VehicleRoutesBuildingWebApplication.Models.Domain.Depot>
+@{
+    ViewData["Title"] = "Список депо";
+}
+
+<h1>Депо</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Адрес</th>
+            <th> </th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var depo in Model)
+        {
+            <tr>
+                <td>@depo.Name</td>
+                <td>@depo.Location.Adress</td>
+                <td> <a href="Depots/Delete/@depo.Id">Удалить</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
