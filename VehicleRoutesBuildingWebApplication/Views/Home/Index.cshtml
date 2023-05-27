@@ -184,10 +184,37 @@
                 return Math.hypot(a.Longitude - depot.Longitude, a.Latitude - depot.Latitude) - Math.hypot(b.Longitude - depot.Longitude, b.Latitude - depot.Latitude);
                 }
                 return aAngle - bAngle;
-            });         
+            });     
+            
+            let vehicles = [];
+
+            let currentCapacity = 0;
+
+            let currentVehicle = null;
+
+            for(let i = 0; i < clients.length; i++){
+                if(currentCapacity - clients[i].ProductWeight < 0)
+                {
+                    var vehicle = {
+                    Depot: depot,
+                    Clients: [],
+                    Capacity: maxCapacity
+                    };
+
+                    currentVehicle = vehicle;
+                    vehicles.push(currentVehicle);
+                    currentCapacity = maxCapacity;
+                }
+
+                if(currentCapacity - clients[i].ProductWeight > 0)
+                {
+                    currentVehicle.Clients.push(clients[i]);
+                    currentCapacity -= clients[i].ProductWeight;
+                }
+            }
 
             
-            return clients;
+            return vehicles;
         }
 
         function fillDistanceArray() {
