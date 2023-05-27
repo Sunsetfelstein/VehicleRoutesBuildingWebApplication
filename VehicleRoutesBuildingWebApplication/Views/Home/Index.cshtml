@@ -174,15 +174,26 @@
 
             for(let i = 0; i < vehicles.length; i++){
                 let vehicle = vehicles[i];
-                
-                let refundClients = getRefundClients(vehicle.Clients)
 
+                let clients = vehicle.Clients;
+                
+                let refundClients = getRefundClients(clients)
+
+                let deliveryClients = [];
+
+                if(refundClients != null){
+                    for(let j = 0; j < clients.length; j++){
+                        if(!containsObject(clients[j], refundClients))
+                            deliveryClients.push(clients[j]);
+                    }         
+                }
+                
                 let t = 0;
             }
         }
 
-        function getRefundClients(clients){\
-        
+        function getRefundClients(clients){
+
             const randomnessNumber = 7;
 
             let randomClients = [];
