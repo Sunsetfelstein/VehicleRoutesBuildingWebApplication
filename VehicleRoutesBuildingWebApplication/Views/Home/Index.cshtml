@@ -159,7 +159,7 @@
         }
 
         function createOptimalRoutes(depotsWithClients){
-            let clients = distributeClients(depotsWithClients[2].Clients, 700, depotsWithClients[2]);
+            let clients = distributeClients(depotsWithClients[0].Clients, 700, depotsWithClients[0]);
 
         }
 
@@ -185,6 +185,8 @@
                 }
                 return aAngle - bAngle;
             });         
+
+            
             return clients;
         }
 
