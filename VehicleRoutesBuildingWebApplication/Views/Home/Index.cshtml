@@ -68,6 +68,8 @@
             }
 
         var points = [];
+
+        const vehicleCapacity = 2000;
     
         @foreach (var point in Model)
         {
@@ -149,19 +151,52 @@
                             depotIndex = j;
                         }
                     }
-                    depotsWithClients[depotIndex].Clients.push(points[i]);
+
+                    var client = {
+                        Name: points[i].Name,
+                        PhoneNumber: points[i].PhoneNumber,
+                        ProductWeight: points[i].ProductWeight,
+                        Latitude: points[i].Latitude,
+                        Longitude: points[i].Longitude,
+                        Mark: points[i].Mark,
+                        Index: i
+                    };
+                    depotsWithClients[depotIndex].Clients.push(client);
                 }
             }
 
-            createOptimalRoutes(depotsWithClients, distanceArray);
-
-            
+            createOptimalRoutes(depotsWithClients, distanceArray);           
         }
 
-        function createOptimalRoutes(depotsWithClients){
-            let clients = distributeClients(depotsWithClients[0].Clients, 700, depotsWithClients[0]);
+        function createOptimalRoutes(depotsWithClients, distanceArray){
 
+            let vehicles = distributeClients(depotsWithClients[0].Clients, vehicleCapacity, depotsWithClients[0]);
+
+            for(let i = 0; i < vehicles.length; i++){
+                let vehicle = vehicles[i];
+                
+                let refundClients = getRefundClients(vehicle.Clients)
+
+                let t = 0;
+            }
         }
+
+        function getRefundClients(clients){\
+        
+            const randomnessNumber = 7;
+
+            let randomClients = [];
+
+            for (let i = 0; i < clients.length; i++) {
+                const randomNumber = Math.floor(Math.random() * 10) + 1;
+                if(randomNumber > randomnessNumber)
+                    randomClients.push(clients[i]);
+            }
+
+            return randomClients;
+        }
+
+        
 
         function polarCoordinates(origin, target) {
             const x = target.x - origin.x;
@@ -212,7 +247,6 @@
                     currentCapacity -= clients[i].ProductWeight;
                 }
             }
-
             
             return vehicles;
         }
