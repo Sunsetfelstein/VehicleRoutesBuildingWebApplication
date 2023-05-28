@@ -170,9 +170,12 @@
 
         function createOptimalRoutes(depotsWithClients, distanceArray){
 
-            let vehicles = distributeClients(depotsWithClients[0].Clients, vehicleCapacity, depotsWithClients[0]);
+            let depot = depotsWithClients[0];
+
+            let vehicles = distributeClients(depot.Clients, vehicleCapacity, depot);
 
             for(let i = 0; i < vehicles.length; i++){
+
                 let vehicle = vehicles[i];
 
                 let clients = vehicle.Clients;
@@ -188,10 +191,26 @@
                     }         
                 }
 
-                let routeLength = getRouteLength(clients, distanceArray);
+                let route = buildRouteFromDepotToDepot(depot, deliveryClients, refundClients);
+
+                let routeLength = getRouteLength(route, distanceArray);
 
                 let t = 0;
             }
+        }
+
+        function buildRouteFromDepotToDepot(depo, deliveryClients, refundClients){
+            let route = [];
+            route.push(depo);
+
+            for(let i = 0; i < deliveryClients.length; i++)
+                route.push(deliveryClients[i]);
+
+            for(let i = 0; i < refundClients.length; i++)
+                route.push(refundClients[i]);  
+
+            route.push(depo);
+            return route;
         }
 
         function getRouteLength(points, distanceArray){
@@ -201,6 +220,8 @@
             }
             return length;
         }
+
+        
 
         function getDistanceBetweenTwoPoint(firstPoint, secondPoint, distanceArray)
         {
