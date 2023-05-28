@@ -187,9 +187,24 @@
                             deliveryClients.push(clients[j]);
                     }         
                 }
-                
+
+                let routeLength = getRouteLength(clients, distanceArray);
+
                 let t = 0;
             }
+        }
+
+        function getRouteLength(points, distanceArray){
+            let length = 0;
+            for(let i = 0; i < points.length - 1; i++){
+                length += getDistanceBetweenTwoPoint(points[i], points[i + 1], distanceArray);
+            }
+            return length;
+        }
+
+        function getDistanceBetweenTwoPoint(firstPoint, secondPoint, distanceArray)
+        {
+            return distanceArray[firstPoint.Index][secondPoint.Index];
         }
 
         function getRefundClients(clients){
