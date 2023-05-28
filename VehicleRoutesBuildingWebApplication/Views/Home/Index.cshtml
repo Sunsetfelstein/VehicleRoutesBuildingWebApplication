@@ -165,38 +165,143 @@
                 }
             }
 
-            createOptimalRoutes(depotsWithClients, distanceArray);           
+            createRationalRoutes(depotsWithClients, distanceArray);    
+            
+            
         }
 
-        function createOptimalRoutes(depotsWithClients, distanceArray){
+        function createRationalRoutes(depotsWithClients, distanceArray){
 
-            let depot = depotsWithClients[0];
+            for(let j = 0; j < depotsWithClients.length; j++){
+                let depot = depotsWithClients[j];
 
-            let vehicles = distributeClients(depot.Clients, vehicleCapacity, depot);
+                let vehicles = distributeClients(depot.Clients, vehicleCapacity, depot);
 
-            for(let i = 0; i < vehicles.length; i++){
+                for(let i = 0; i < vehicles.length; i++){
 
-                let vehicle = vehicles[i];
+                    let vehicle = vehicles[i];
 
-                let clients = vehicle.Clients;
-                
-                let refundClients = getRefundClients(clients)
+                    let clients = vehicle.Clients;
+                    
+                    let refundClients = getRefundClients(clients)
 
-                let deliveryClients = [];
+                    for(let k = 0; k < refundClients.length; k++){
+                        refundClients[k].Mark.options.set('iconColor', '#ff0000');
+                    }
 
-                if(refundClients != null){
+                    let deliveryClients = getDeliveryClients(refundClients, clients);    
+                    
+                    for(let k = 0; k < deliveryClients.length; k++){
+                        deliveryClients[k].Mark.options.set('iconColor', "#00FF00");
+                    }
+
+                    var finalRoute = calculateRationalRouteForVehicle(depot, deliveryClients, refundClients, distanceArray, 100);
+
+                    createOnMap(finalRoute);
+
+                    let t = 0;
+                }
+            }
+        }
+
+        function createOnMap(route){
+            // Создаем массив с координатами точек маршрута
+            var coordinates = [];
+            for (var i = 0; i < route.length; i++) {
+                var placemarkCoords = route[i].Mark.geometry.getCoordinates();
+                coordinates.push(placemarkCoords);
+            }
+
+            // Создаем мультимаршрут
+            var multiRoute = new ymaps.multiRouter.MultiRoute({
+                // Указываем точки маршрута
+                referencePoints: coordinates,
+                // Устанавливаем тип маршрута (auto - автомобильный маршрут, masstransit - общественный транспорт, pedestrian - пешеходный маршрут)
+                type: "auto"
+            }, {
+                // Внешний вид путевых точек.
+                wayPointStartIconColor: "#FFFFFF",
+                wayPointStartIconFillColor: "#B3B3B3",
+                // Внешний вид линии активного маршрута.
+                routeActiveStrokeWidth: 8,
+                routeActiveStrokeStyle: 'solid',
+                routeActiveStrokeColor: getRandomColor(),
+                // Внешний вид линий альтернативных маршрутов.
+                routeStrokeStyle: 'dot',
+                routeStrokeWidth: 3,
+                boundsAutoApply: true,
+                // Отключаем отображение иконок
+                wayPointVisible: false
+            });
+
+            // Добавляем мультимаршрут на карту
+            map.geoObjects.add(multiRoute);
+
+            // Устанавливаем границы отображения карты
+            multiRoute.model.events.add("requestsuccess", function () {
+                var activeRoute = multiRoute.getActiveRoute();
+                if (activeRoute && activeRoute.getBounds()) { // проверяем, что координаты маршрута существуют
+                    map.setBounds(activeRoute.getBounds(), { checkZoomRange: true });
+                }
+            });
+        }
+
+        function getRandomColor() {
+            const letters = "0123456789ABCDEF";
+            let color = "#";
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function calculateRationalRouteForVehicle(depot, deliveryClients, refundClients, distanceArray, iteration){
+            let route = buildRouteFromDepotToDepot(depot, deliveryClients, refundClients);
+
+            let routeLength = getRouteLength(route, distanceArray);
+
+            for(let i = 0; i < iteration; i++){
+                for(let j = 0; j < 5; j++){
+
+                    let deliveryClientOrderList = swapRandom(deliveryClients);
+
+                    let deliveryClientOrderRoute  = buildRouteFromDepotToDepot(depot, deliveryClientOrderList, refundClients);
+
+                    let deliveryClientOrderRouteLength = getRouteLength(deliveryClientOrderRoute, distanceArray);
+
+                    let refundClientOrderList = swapRandom(refundClients);
+
+                    let deliveryAndRefundClientOrderRoute  = buildRouteFromDepotToDepot(depot, deliveryClientOrderList, refundClientOrderList);
+
+                    let deliveryAndRefundClientOrderRouteLength = getRouteLength(deliveryAndRefundClientOrderRoute, distanceArray);
+
+                    if(deliveryAndRefundClientOrderRouteLength > deliveryClientOrderRouteLength && deliveryAndRefundClientOrderRouteLength > routeLength){
+                        route = deliveryAndRefundClientOrderRoute;
+                        deliveryClients = deliveryClientOrderList;
+                        refundClients = refundClientOrderList;
+                    }
+
+                     if(deliveryClientOrderRouteLength > deliveryAndRefundClientOrderRouteLength && deliveryClientOrderRouteLength > routeLength){
+                        route = deliveryClientOrderRouteLength;
+                        deliveryClients = deliveryClientOrderList;
+                    }
+                }
+            }
+
+            return route;
+        }
+
+        function getDeliveryClients(refundClients, clients){
+            let deliveryClients = [];
+
+            if(refundClients != null){
                     for(let j = 0; j < clients.length; j++){
                         if(!containsObject(clients[j], refundClients))
                             deliveryClients.push(clients[j]);
                     }         
                 }
-
-                let route = buildRouteFromDepotToDepot(depot, deliveryClients, refundClients);
-
-                let routeLength = getRouteLength(route, distanceArray);
-
-                let t = 0;
-            }
+            
+            return deliveryClients;
         }
 
         function buildRouteFromDepotToDepot(depo, deliveryClients, refundClients){
@@ -221,7 +326,22 @@
             return length;
         }
 
-        
+        function swapRandom(array) {
+            if(array == null)
+                return array;
+            
+            if (array.length <= 1) 
+                return array;
+
+            const index1 = Math.floor(Math.random() * array.length);
+            let index2 = Math.floor(Math.random() * (array.length - 1)); 
+            if (index2 === index1) {
+                index2++; 
+            }
+            [array[index1], array[index2]] = [array[index2], array[index1]]; 
+
+            return array;
+        }
 
         function getDistanceBetweenTwoPoint(firstPoint, secondPoint, distanceArray)
         {
@@ -241,9 +361,7 @@
             }
 
             return randomClients;
-        }
-
-        
+        }    
 
         function polarCoordinates(origin, target) {
             const x = target.x - origin.x;
