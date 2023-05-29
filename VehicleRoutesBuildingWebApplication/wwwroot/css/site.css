@@ -13,7 +13,33 @@ html {
   min-height: 100%;
 }
 
+header {
+  background-color: #282828; /* Цвет Header */
+}
+
 body {
-  margin-bottom: 60px;
-  background-color: #F0F8FF;
+  background-color: #191919; /* Цвет Body */
+  color: #fff; /* Белый цвет текста */
+}
+
+nav {
+  background-color: #282828; /* Цвет фона навигационного меню */
+  box-shadow: none; /* Убираем тень */
+}
+
+.navbar-collapse {
+  background-color: #282828; /* цвет фона меню */
+}
+
+.navbar-nav .nav-item .nav-link {
+  color: #fff; /* белый цвет для пунктов меню */
+}
+
+.navbar-nav .nav-item .nav-link:hover,
+.navbar-nav .nav-item .nav-link:focus {
+  color: #ccc; /* цвет при наведении на ссылки в меню */
+}
+
+.table td, .table th {
+  color: #FFFFFF;
 }
