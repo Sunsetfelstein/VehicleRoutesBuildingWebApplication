@@ -74,6 +74,24 @@
                         });
                 });
             }
+        
+        var dataToCsv = [];
+            
+        
+
+        function pushHeaderToDataToCsv(){
+            dataToCsv = [];
+            let resultVehicle = {
+                                Name: "Имя",
+                                PhoneNumber: "Номер телефона",
+                                ProductWeight: "Вес товара",
+                                Latitude: "Широта",
+                                Longitude: "Долгота",
+                                Type: "Тип",
+                            };
+        
+            dataToCsv.push(resultVehicle);    
+        }
 
         var points = [];
 
@@ -106,8 +124,11 @@
             </text>
         };   
 
-        let button = document.getElementById('routeBtn');
-        button.addEventListener('click', distribClientsByDepo);      
+        let routeBtn = document.getElementById('routeBtn');
+        routeBtn.addEventListener('click', distribClientsByDepo);  
+
+        let resultBtn = document.getElementById('resultBtn');
+        resultBtn.addEventListener('click', downloadCSV);       
 
         function containsObject(obj, list) {
             var i;
@@ -119,6 +140,28 @@
 
             return false;
         }
+        
+        function parse(str) {
+            var args = [].slice.call(arguments, 1),
+                i = 0;
+        
+            return str.replace(/%s/g, () => args[i++]);
+        }
+
+        // Функция для преобразования массива объектов в CSV-файл и сохранения его на жестком диске
+        function downloadCSV() {
+            
+            // Преобразуем массив объектов в CSV-строку
+            const csvString = dataToCsv.map(obj => Object.values(obj).join(',')).join('\n');
+           
+            // Создаем ссылку на скачивание файла
+            const link = document.createElement('a');
+            link.download = 'data.txt';
+            link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvString);
+            link.click();
+            
+        }
+
 
         async function distribClientsByDepo(){
 
@@ -180,13 +223,27 @@
         }
 
         function createRationalRoutes(depotsWithClients, distanceArray){
-
+            
+            
+            pushHeaderToDataToCsv();
+            
             for(let j = 0; j < depotsWithClients.length; j++){
                 let depot = depotsWithClients[j];
 
                 let vehicles = distributeClients(depot.Clients, vehicleCapacity, depot);
 
                 for(let i = 0; i < vehicles.length; i++){
+
+                    let resultVehicle = {
+                        Name: parse('Транспортно средство %s', i + 1),
+                        PhoneNumber: "",
+                        ProductWeight: "",
+                        Latitude: "",
+                        Longitude: "",
+                        Type: "",
+                    };
+
+                    dataToCsv.push(resultVehicle);
 
                     let vehicle = vehicles[i];
 
@@ -205,6 +262,37 @@
                     }
 
                     var finalRoute = calculateRationalRouteForVehicle(depot, deliveryClients, refundClients, distanceArray, 100);
+
+                    for(let k = 0; k < finalRoute.length; k++){
+                        let resultObject = {
+                            Name: finalRoute[k].Name,
+                            PhoneNumber: finalRoute[k].PhoneNumber,
+                            ProductWeight: finalRoute[k].ProductWeight,
+                            Latitude: finalRoute[k].Latitude,
+                            Longitude: finalRoute[k].Longitude,
+                            Type: "",
+                        };
+
+                        if(containsObject(finalRoute[k], deliveryClients))
+                            resultObject.Type = "Клиент доставки";
+                        else if(containsObject(finalRoute[k], refundClients))
+                            resultObject.Type = "Клиент возврата";
+                        else
+                            resultObject.Type = "Депо";
+
+                        dataToCsv.push(resultObject);
+                    }
+
+                    let emptyRow = {
+                        Name: "",
+                        PhoneNumber: "",
+                        ProductWeight: "",
+                        Latitude: "",
+                        Longitude: "",
+                        Type: "",
+                    };
+
+                    dataToCsv.push(emptyRow);
 
                     createOnMap(finalRoute);
 

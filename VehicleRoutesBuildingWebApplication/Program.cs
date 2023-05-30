@@ -1,4 +1,7 @@
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.WebEncoders;
 using VehicleRoutesBuildingWebApplication.Data;
 using VehicleRoutesBuildingWebApplication.Models.Domain;
 
@@ -8,6 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddMvc();
+
+builder.Services.Configure<WebEncoderOptions>(options => 
+{
+    options.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All);
+});
 
 // Добавил собственный DbContext
 builder.Services.AddDbContext<Context>(options 
