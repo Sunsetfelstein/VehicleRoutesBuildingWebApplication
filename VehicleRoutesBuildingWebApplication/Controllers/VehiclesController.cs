@@ -38,11 +38,23 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(AddVehicleViewModel addVehicleViewModel)
         {
-            var name = addVehicleViewModel.Name;
+            var name = "Базовое ТС";
             var capacity = addVehicleViewModel.Capacity;
             var fuelConsumption = addVehicleViewModel.FuelConsumption;
+            var iterations = addVehicleViewModel.Iterations;
+            
+            if (capacity <= 0 || fuelConsumption <= 0 || iterations <= 0)
+                return RedirectToAction("Index");
+            
+            var oldVehicle = await _context.Vehicles.FirstOrDefaultAsync();
+            
+            if (oldVehicle != null)
+            {
+                _context.Vehicles.Remove(oldVehicle);
+                await _context.SaveChangesAsync();
+            }
 
-            var vehicle = new Vehicle(name, capacity, fuelConsumption);
+            var vehicle = new Vehicle(name, capacity, fuelConsumption, iterations);
 
             await _context.Vehicles.AddAsync(vehicle);
             await _context.SaveChangesAsync();
@@ -55,11 +67,11 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
         {
             var vehicle = await _context.Vehicles.FirstOrDefaultAsync(x => x.Id == Id);
 
-            if (vehicle != null)
-            {
-                _context.Vehicles.Remove(vehicle);
-                await _context.SaveChangesAsync();
-            }
+            if (vehicle == null) 
+                return RedirectToAction("Index");
+            
+            _context.Vehicles.Remove(vehicle);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }

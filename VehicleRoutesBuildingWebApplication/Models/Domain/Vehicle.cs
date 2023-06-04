@@ -9,6 +9,7 @@ namespace VehicleRoutesBuildingWebApplication.Models.Domain
         public string Name { get; set; }
         public int Capacity { get; set; }
         public double FuelConsumption { get; set; }
+        public int Iterations { get; set; }
 
 
         public Vehicle()
@@ -16,12 +17,13 @@ namespace VehicleRoutesBuildingWebApplication.Models.Domain
 
         }
 
-        public Vehicle(string name, int capacity, double fuelConsumption)
+        public Vehicle(string name, int capacity, double fuelConsumption, int iterations)
         {
             Id = Guid.NewGuid();
             Name = name;
             Capacity = capacity;
             FuelConsumption = fuelConsumption;
+            Iterations = iterations;
         }
     }
 }

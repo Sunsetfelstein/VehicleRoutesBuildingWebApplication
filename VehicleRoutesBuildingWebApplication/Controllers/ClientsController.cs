@@ -43,27 +43,22 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Add(string coordinates,
-    string adress,
+    string address,
     string name,
     string phoneNumber,
     int productWeight)
          {
-            //var coordinates = addClientViewModel.Coordinates;
-            //var adress = addClientViewModel.Adress;
-            //var name = addClientViewModel.Name;
-            //var phoneNumber = addClientViewModel.PhoneNumber;
-            //var productWeight = addClientViewModel.ProductWeight;
+             if (string.IsNullOrEmpty(coordinates) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(address)
+                 || productWeight <= 0)
+                 return RedirectToAction("Index");
 
-            if (string.IsNullOrEmpty(coordinates))
-                return RedirectToAction("Index");
+            var coordinatesList = coordinates.Split(',').ToList();
 
-            var coordiantesList = coordinates.Split(',').ToList();
+            var latitude = double.Parse(coordinatesList[CoordinatesIndex.Latitude], CultureInfo.InvariantCulture);
 
-            var latitude = double.Parse(coordiantesList[CoordinatesIndex.Latitude], CultureInfo.InvariantCulture);
+            var longitude = double.Parse(coordinatesList[CoordinatesIndex.Longitude], CultureInfo.InvariantCulture);
 
-            var longitude = double.Parse(coordiantesList[CoordinatesIndex.Longitude], CultureInfo.InvariantCulture);
-
-            var client = new Client(latitude, longitude, adress, name, phoneNumber, productWeight);
+            var client = new Client(latitude, longitude, address, name, phoneNumber, productWeight);
 
             var location = client.Location;
 

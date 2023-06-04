@@ -21,9 +21,7 @@
                 map = new ymaps.Map(document.getElementById('map-main'), {
                 center: [54.735152, 55.958736],
                 zoom: 7
-            });
-
-            
+            });        
 
             map.events.add('click', function (e) {
                 var coords = e.get('coords');
@@ -75,9 +73,7 @@
                 });
             }
         
-        var dataToCsv = [];
-            
-        
+        var dataToCsv = [];     
 
         function pushHeaderToDataToCsv(){
             dataToCsv = [];
@@ -95,7 +91,11 @@
 
         var points = [];
 
-        const vehicleCapacity = 2000;
+        var vehicleCapacity = 2000;
+        
+        var iterations = 1000;
+        
+        var fuelConsumption = 17;
     
         @foreach (var point in Model)
         {
@@ -108,6 +108,10 @@
                 preset: isDepot ? 'islands#nightDotIcon' : 'islands#violetDotIconWithCaption',
                     draggable: true
                 });
+                
+                vehicleCapacity = @point.Capacity;
+                iterations = @point.Iterations;
+                fuelConsumption = @point.FuelConsumption;
 
                 var point = {
                     Name: "@point.Name",
@@ -261,7 +265,7 @@
                         deliveryClients[k].Mark.options.set('iconColor', "#00FF00");
                     }
 
-                    var finalRoute = calculateRationalRouteForVehicle(depot, deliveryClients, refundClients, distanceArray, 100);
+                    var finalRoute = calculateRationalRouteForVehicle(depot, deliveryClients, refundClients, distanceArray, iterations);
 
                     for(let k = 0; k < finalRoute.length; k++){
                         let resultObject = {
@@ -303,9 +307,9 @@
 
         function createOnMap(route){
             // Создаем массив с координатами точек маршрута
-            var coordinates = [];
-            for (var i = 0; i < route.length; i++) {
-                var placemarkCoords = route[i].Mark.geometry.getCoordinates();
+            let coordinates = [];
+            for (let i = 0; i < route.length; i++) {
+                let placemarkCoords = route[i].Mark.geometry.getCoordinates();
                 coordinates.push(placemarkCoords);
             }
 

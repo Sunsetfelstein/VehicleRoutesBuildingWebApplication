@@ -43,23 +43,19 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Add(string coordinates,
-    string adress,
+    string address,
     string name)
         {
-            //var coordinates = addDepotViewModel.Coordinates;
-            //var adress = addDepotViewModel.Adress;
-            //var name = addDepotViewModel.Name;
-
-            if (string.IsNullOrEmpty(coordinates))
+            if (string.IsNullOrEmpty(coordinates) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(address))
                 return RedirectToAction("Index");
 
-            var coordiantesList = coordinates.Split(',').ToList();
+            var coordinatesList = coordinates.Split(',').ToList();
 
-            var latitude = double.Parse(coordiantesList[CoordinatesIndex.Latitude], CultureInfo.InvariantCulture);
+            var latitude = double.Parse(coordinatesList[CoordinatesIndex.Latitude], CultureInfo.InvariantCulture);
 
-            var longitude = double.Parse(coordiantesList[CoordinatesIndex.Longitude], CultureInfo.InvariantCulture);
+            var longitude = double.Parse(coordinatesList[CoordinatesIndex.Longitude], CultureInfo.InvariantCulture);
 
-            var depot = new Depot(latitude, longitude, adress, name);
+            var depot = new Depot(latitude, longitude, address, name);
 
             var location = depot.Location;
 

@@ -26,27 +26,29 @@ public class HomeController : Controller
     {
         var clients = await _context.Clients.Include(x => x.Location).ToListAsync();
         var depots = await _context.Depots.Include(x => x.Location).ToListAsync();
+        var vehicle = await _context.Vehicles.FirstOrDefaultAsync();
+        
+        var capacity = vehicle?.Capacity ?? 0;
+        var fuelConsumption = vehicle?.FuelConsumption ?? 0.0;
+        var iterations = vehicle?.Iterations ?? 0;
 
-        var points = new List<PointViewModel>();
+        var points = clients.Select(client => new PointViewModel(client.Location, client.Name, client.PhoneNumber, client.ProductWeight, false, capacity, fuelConsumption, iterations)).ToList();
 
-        foreach(var client in clients) 
-        {
-            points.Add(new PointViewModel(client.Location, client.Name, client.PhoneNumber, client.ProductWeight, false));
-        }
         foreach(var depot in depots)
         {
-            var zeroWeight = 0;
-            var emptyPhoneNumver = string.Empty;
-            points.Add(new PointViewModel(depot.Location, depot.Name, emptyPhoneNumver, zeroWeight, true));
+            const int zeroWeight = 0;
+            var emptyPhoneNumber = string.Empty;
+            points.Add(new PointViewModel(depot.Location, depot.Name, emptyPhoneNumber, zeroWeight, true, capacity, fuelConsumption, iterations));
         }
+
         return View(points);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Index([FromBody] LocationViewModel location)
+    public Task<IActionResult> Index([FromBody] LocationViewModel location)
     {
         var test = location;
-        return RedirectToAction("Index");
+        return Task.FromResult<IActionResult>(RedirectToAction("Index"));
     }
 
     public IActionResult Privacy()

@@ -3,12 +3,8 @@
     ViewData["Title"] = "Создание транспортных средств";
 }
 
-<h1>Добавить транспортное средство</h1>
+<h1>Настройки алгоритма</h1>
 <form method="post" action="Add" class="mt-5">
-    <div class="mb-3">
-        <label for="" class="form-label">Имя</label>
-        <input type="text" id="nameBox" class="form-control" asp-for="Name" />
-    </div>
     <div class="mb-3">
         <label for="" class="form-label">Грузоподъемность</label>
         <input type="number" id="capacityBox" class="form-control" asp-for="Capacity" />
@@ -17,6 +13,10 @@
         <label for="" class="form-label">Расход топлива</label>
         <input type="number" id="fuelConsumptionBox" class="form-control" asp-for="FuelConsumption" />
     </div>
-    <button type="submit" id="sendBtn" class="btn btn-primary" style="margin-top: 10px; width: 200px; color: black; background-color: white; border-color: black;">Добавить</button>
+    <div class="mb-3">
+        <label for="" class="form-label">Количество итераций</label>
+        <input type="number" id="iterationsBox" class="form-control" asp-for="Iterations" />
+    </div>
+    <button type="submit" id="sendBtn" class="btn btn-primary" style="margin-top: 10px; width: 200px; color: black; background-color: white; border-color: black;">Изменить</button>
 
 </form>

@@ -3,14 +3,14 @@
     ViewData["Title"] = "Список транспортных средств";
 }
 
-<h1>Транспортные средства</h1>
+<h1>Настройки</h1>
 
 <table class="table">
     <thead>
-        <tr>
-            <th>Модель</th>
+        <tr>           
             <th>Грузоподъемность</th>
             <th>Расход топлива</th>
+            <th>Количество итераций</th>
             <th> </th>
             <th> </th>
         </tr>
@@ -18,11 +18,11 @@
     <tbody>
         @foreach (var vehicle in Model)
         {
-            <tr>
-                <td>@vehicle.Name</td>
+            <tr>   
                 <td>@vehicle.Capacity</td>
                 <td>@vehicle.FuelConsumption</td>
-                <td> <a href="Vehicles/Delete/@vehicle.Id" style="color: white;">Удалить</a></td>
+                <td>@vehicle.Iterations</td>
+                <td> <a href="Vehicles/Add" style="color: white;">Изменить</a></td>
             </tr>
         }
     </tbody>
