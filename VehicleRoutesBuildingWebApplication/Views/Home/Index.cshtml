@@ -81,8 +81,7 @@
                                 Name: "Имя",
                                 PhoneNumber: "Номер телефона",
                                 ProductWeight: "Вес товара",
-                                Latitude: "Широта",
-                                Longitude: "Долгота",
+                                Address: "Адрес",
                                 Type: "Тип",
                             };
         
@@ -119,8 +118,10 @@
                     ProductWeight: @point.ProductWeight,
                     Latitude: @point.Location.Coordinate.Latitude.ToString().Replace(',','.'),
                     Longitude: @point.Location.Coordinate.Longitude.ToString().Replace(',','.'),
+                    Address: "@point.Location.Adress",
                     Mark: clientMark,
-                    IsDepot: isDepot
+                    IsDepot: isDepot,
+                   
                 };
 
                 map.geoObjects.add(clientMark);
@@ -156,16 +157,14 @@
         function downloadCSV() {
             
             // Преобразуем массив объектов в CSV-строку
-            const csvString = dataToCsv.map(obj => Object.values(obj).join(',')).join('\n');
+            const csvString = dataToCsv.map(obj => Object.values(obj).join(';')).join('\n');
            
             // Создаем ссылку на скачивание файла
             const link = document.createElement('a');
             link.download = 'data.txt';
             link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvString);
-            link.click();
-            
+            link.click();        
         }
-
 
         async function distribClientsByDepo(){
 
@@ -186,7 +185,8 @@
                     Longitude: points[i].Longitude,
                     Latitude: points[i].Latitude,
                     Index: i,
-                    Clients: []
+                    Clients: [],
+                    Address: points[i].Address
                     };
 
                     depotsWithClients.push(depotWithClients);
@@ -215,7 +215,8 @@
                         Latitude: points[i].Latitude,
                         Longitude: points[i].Longitude,
                         Mark: points[i].Mark,
-                        Index: i
+                        Index: i,
+                        Address: points[i].Address
                     };
                     depotsWithClients[depotIndex].Clients.push(client);
                 }
@@ -266,14 +267,15 @@
                     }
 
                     var finalRoute = calculateRationalRouteForVehicle(depot, deliveryClients, refundClients, distanceArray, iterations);
-
+                    
+                    let routeLength = getRouteLength(finalRoute, distanceArray);
+                    
                     for(let k = 0; k < finalRoute.length; k++){
                         let resultObject = {
                             Name: finalRoute[k].Name,
                             PhoneNumber: finalRoute[k].PhoneNumber,
                             ProductWeight: finalRoute[k].ProductWeight,
-                            Latitude: finalRoute[k].Latitude,
-                            Longitude: finalRoute[k].Longitude,
+                            Address: finalRoute[k].Address,
                             Type: "",
                         };
 
@@ -286,6 +288,17 @@
 
                         dataToCsv.push(resultObject);
                     }
+                    
+                    let routeLengthRow = {
+                       Name: "Стоимость маршрута",
+                       PhoneNumber: routeLength,
+                       ProductWeight: "",
+                       Latitude: "",
+                       Longitude: "",
+                       Type: "",
+                    };
+                     
+                    dataToCsv.push(routeLengthRow);
 
                     let emptyRow = {
                         Name: "",
