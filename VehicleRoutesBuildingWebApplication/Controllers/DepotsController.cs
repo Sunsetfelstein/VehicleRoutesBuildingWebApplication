@@ -43,10 +43,10 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Add(string coordinates,
-    string address,
+    string adress,
     string name)
         {
-            if (string.IsNullOrEmpty(coordinates) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(address))
+            if (string.IsNullOrEmpty(coordinates))
                 return RedirectToAction("Index");
 
             var coordinatesList = coordinates.Split(',').ToList();
@@ -55,7 +55,7 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
 
             var longitude = double.Parse(coordinatesList[CoordinatesIndex.Longitude], CultureInfo.InvariantCulture);
 
-            var depot = new Depot(latitude, longitude, address, name);
+            var depot = new Depot(latitude, longitude, adress, name);
 
             var location = depot.Location;
 

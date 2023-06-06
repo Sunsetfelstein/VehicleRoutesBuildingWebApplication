@@ -43,14 +43,13 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Add(string coordinates,
-    string address,
+    string adress,
     string name,
     string phoneNumber,
     int productWeight)
          {
-             if (string.IsNullOrEmpty(coordinates) || string.IsNullOrEmpty(name) || string.IsNullOrEmpty(address)
-                 || productWeight <= 0)
-                 return RedirectToAction("Index");
+            if (string.IsNullOrEmpty(coordinates))
+                return RedirectToAction("Index");
 
             var coordinatesList = coordinates.Split(',').ToList();
 
@@ -58,7 +57,7 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
 
             var longitude = double.Parse(coordinatesList[CoordinatesIndex.Longitude], CultureInfo.InvariantCulture);
 
-            var client = new Client(latitude, longitude, address, name, phoneNumber, productWeight);
+            var client = new Client(latitude, longitude, adress, name, phoneNumber, productWeight);
 
             var location = client.Location;
 

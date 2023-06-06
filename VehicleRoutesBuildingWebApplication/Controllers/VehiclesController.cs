@@ -43,8 +43,8 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
             var fuelConsumption = addVehicleViewModel.FuelConsumption;
             var iterations = addVehicleViewModel.Iterations;
             
-            if (capacity <= 0 || fuelConsumption <= 0 || iterations <= 0)
-                return RedirectToAction("Index");
+            /*if (capacity <= 0 || fuelConsumption <= 0 || iterations <= 0)
+                return RedirectToAction("Index");*/
             
             var oldVehicle = await _context.Vehicles.FirstOrDefaultAsync();
             
