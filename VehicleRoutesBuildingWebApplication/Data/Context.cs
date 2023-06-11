@@ -12,6 +12,6 @@ public class Context : DbContext
     
     public DbSet<Client> Clients { get; set; }
     public DbSet<Location> Locations { get; set; }
-    public DbSet<Vehicle> Vehicles { get; set; }
+    public DbSet<Settings> Settings { get; set; }
     public DbSet<Depot> Depots { get; set; }
 }

@@ -9,15 +9,15 @@ using Microsoft.EntityFrameworkCore;
 using VehicleRoutesBuildingWebApplication.Data;
 using VehicleRoutesBuildingWebApplication.Models.ClientsViewModels;
 using VehicleRoutesBuildingWebApplication.Models.Domain;
-using VehicleRoutesBuildingWebApplication.Models.VehicleViewModels;
+using VehicleRoutesBuildingWebApplication.Models.SettingsViewModels;
 
 namespace VehicleRoutesBuildingWebApplication.Controllers
 {
-    public class VehiclesController : Controller
+    public class SettingsController : Controller
     {
         private readonly Context _context;
 
-        public VehiclesController(Context context)
+        public SettingsController(Context context)
         {
             _context = context;
         }
@@ -25,38 +25,39 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var vehicles = await _context.Vehicles.ToListAsync();
-            return View(vehicles);
+            var settings = await _context.Settings.ToListAsync();
+            return View(settings);
         }
 
         [HttpGet]
-        public IActionResult Add()
+        public IActionResult Change()
         {
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add(AddVehicleViewModel addVehicleViewModel)
+        public async Task<IActionResult> Change(ChangeSettingsViewModel changeSettingsViewModel)
         {
-            var name = "Базовое ТС";
-            var capacity = addVehicleViewModel.Capacity;
-            var fuelConsumption = addVehicleViewModel.FuelConsumption;
-            var iterations = addVehicleViewModel.Iterations;
+            var name = "Настройки";
+            var capacity = changeSettingsViewModel.Capacity;
+            var fuelConsumption = changeSettingsViewModel.FuelConsumption;
+            var iterations = changeSettingsViewModel.Iterations;
+            var fuelCost = changeSettingsViewModel.FuelCost;
             
             /*if (capacity <= 0 || fuelConsumption <= 0 || iterations <= 0)
                 return RedirectToAction("Index");*/
             
-            var oldVehicle = await _context.Vehicles.FirstOrDefaultAsync();
+            var oldVehicle = await _context.Settings.FirstOrDefaultAsync();
             
             if (oldVehicle != null)
             {
-                _context.Vehicles.Remove(oldVehicle);
+                _context.Settings.Remove(oldVehicle);
                 await _context.SaveChangesAsync();
             }
 
-            var vehicle = new Vehicle(name, capacity, fuelConsumption, iterations);
+            var settings = new Settings(name, capacity, fuelConsumption, iterations, fuelCost);
 
-            await _context.Vehicles.AddAsync(vehicle);
+            await _context.Settings.AddAsync(settings);
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
@@ -65,12 +66,12 @@ namespace VehicleRoutesBuildingWebApplication.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete(Guid Id)
         {
-            var vehicle = await _context.Vehicles.FirstOrDefaultAsync(x => x.Id == Id);
+            var settings = await _context.Settings.FirstOrDefaultAsync(x => x.Id == Id);
 
-            if (vehicle == null) 
+            if (settings == null) 
                 return RedirectToAction("Index");
             
-            _context.Vehicles.Remove(vehicle);
+            _context.Settings.Remove(settings);
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");

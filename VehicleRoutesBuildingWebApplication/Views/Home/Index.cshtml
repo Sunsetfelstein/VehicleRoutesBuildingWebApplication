@@ -95,6 +95,8 @@
         var iterations = 1000;
         
         var fuelConsumption = 17;
+        
+        var fuelCost = 40;
     
         @foreach (var point in Model)
         {
@@ -111,6 +113,7 @@
                 vehicleCapacity = @point.Capacity;
                 iterations = @point.Iterations;
                 fuelConsumption = @point.FuelConsumption;
+                fuelCost = @point.FuelCost;
 
                 var point = {
                     Name: "@point.Name",
@@ -240,7 +243,7 @@
                 for(let i = 0; i < vehicles.length; i++){
 
                     let resultVehicle = {
-                        Name: parse('Транспортно средство %s', i + 1),
+                        Name: parse('Транспортное средство %s', i + 1),
                         PhoneNumber: "",
                         ProductWeight: "",
                         Latitude: "",
@@ -289,16 +292,27 @@
                         dataToCsv.push(resultObject);
                     }
                     
+                    routeLength = (routeLength / 1000).toFixed(2);
+                    
                     let routeLengthRow = {
-                       Name: "Стоимость маршрута",
+                       Name: "Длина маршрута (км)",
                        PhoneNumber: routeLength,
                        ProductWeight: "",
                        Latitude: "",
                        Longitude: "",
                        Type: "",
                     };
+                    let routeCostRow = {
+                        Name: "Стоимость маршрута (руб)",
+                        PhoneNumber: (routeLength / 100 * fuelCost * fuelConsumption).toFixed(2),
+                        ProductWeight: "",
+                        Latitude: "",
+                        Longitude: "",
+                        Type: "",
+                    };
                      
                     dataToCsv.push(routeLengthRow);
+                    dataToCsv.push(routeCostRow);
 
                     let emptyRow = {
                         Name: "",
@@ -374,37 +388,79 @@
 
             let routeLength = getRouteLength(route, distanceArray);
 
+            let routeWitSwap = buildRouteWithSwap(depot, deliveryClients, refundClients, distanceArray, iteration, routeLength, route);
+            
+            let routeWithSlide = buildRouteWithSlide(depot, deliveryClients, refundClients, distanceArray, iteration, routeLength, route);
+
+            return routeWitSwap;
+        }
+        
+        function buildRouteWithSwap(depot, deliveryClients, refundClients, distanceArray, iteration, routeLength, route)
+        {
+            let routeWithSwap = route;
             for(let i = 0; i < iteration; i++){
                 for(let j = 0; j < 5; j++){
-
+            
                     let deliveryClientOrderList = swapRandom(deliveryClients);
-
+            
                     let deliveryClientOrderRoute  = buildRouteFromDepotToDepot(depot, deliveryClientOrderList, refundClients);
-
+            
                     let deliveryClientOrderRouteLength = getRouteLength(deliveryClientOrderRoute, distanceArray);
-
+            
                     let refundClientOrderList = swapRandom(refundClients);
-
+            
                     let deliveryAndRefundClientOrderRoute  = buildRouteFromDepotToDepot(depot, deliveryClientOrderList, refundClientOrderList);
-
+            
                     let deliveryAndRefundClientOrderRouteLength = getRouteLength(deliveryAndRefundClientOrderRoute, distanceArray);
-
+            
                     if(deliveryAndRefundClientOrderRouteLength > deliveryClientOrderRouteLength && deliveryAndRefundClientOrderRouteLength > routeLength){
-                        route = deliveryAndRefundClientOrderRoute;
+                        routeWithSwap = deliveryAndRefundClientOrderRoute;
                         deliveryClients = deliveryClientOrderList;
                         refundClients = refundClientOrderList;
                     }
-
-                     if(deliveryClientOrderRouteLength > deliveryAndRefundClientOrderRouteLength && deliveryClientOrderRouteLength > routeLength){
-                        route = deliveryClientOrderRouteLength;
+            
+                    if(deliveryClientOrderRouteLength > deliveryAndRefundClientOrderRouteLength && deliveryClientOrderRouteLength > routeLength){
+                        routeWithSwap = deliveryClientOrderRouteLength;
                         deliveryClients = deliveryClientOrderList;
                     }
                 }
             }
-
-            return route;
+            return routeWithSwap;
         }
-
+        
+        function buildRouteWithSlide(depot, deliveryClients, refundClients, distanceArray, iteration, routeLength, route)
+                {
+                    let routeWithSlide = route;
+                    for(let i = 0; i < iteration; i++){
+                        for(let j = 0; j < 5; j++){
+                    
+                            let deliveryClientOrderList = slideRoute(deliveryClients);
+                    
+                            let deliveryClientOrderRoute  = buildRouteFromDepotToDepot(depot, deliveryClientOrderList, refundClients);
+                    
+                            let deliveryClientOrderRouteLength = getRouteLength(deliveryClientOrderRoute, distanceArray);
+                    
+                            let refundClientOrderList = slideRoute(refundClients);
+                    
+                            let deliveryAndRefundClientOrderRoute  = buildRouteFromDepotToDepot(depot, deliveryClientOrderList, refundClientOrderList);
+                    
+                            let deliveryAndRefundClientOrderRouteLength = getRouteLength(deliveryAndRefundClientOrderRoute, distanceArray);
+                    
+                            if(deliveryAndRefundClientOrderRouteLength > deliveryClientOrderRouteLength && deliveryAndRefundClientOrderRouteLength > routeLength){
+                                routeWithSlide = deliveryAndRefundClientOrderRoute;
+                                deliveryClients = deliveryClientOrderList;
+                                refundClients = refundClientOrderList;
+                            }
+                    
+                            if(deliveryClientOrderRouteLength > deliveryAndRefundClientOrderRouteLength && deliveryClientOrderRouteLength > routeLength){
+                                routeWithSlide = deliveryClientOrderRouteLength;
+                                deliveryClients = deliveryClientOrderList;
+                            }
+                        }
+                    }
+                    return routeWithSlide;
+                }
+        
         function getDeliveryClients(refundClients, clients){
             let deliveryClients = [];
 
@@ -455,6 +511,30 @@
             [array[index1], array[index2]] = [array[index2], array[index1]]; 
 
             return array;
+        }
+        
+        function slideRoute(array) {
+          if (array.length < 2) 
+            return array;
+          
+          const n = array.length;
+          const i = Math.floor(Math.random() * (n - 2)); // выбираем случайную позицию внутри маршрута, начиная со второго элемента
+          const j = i + 1;
+        
+          // выбираем длину блока, который нужно переместить
+          const blockLength = Math.floor(Math.random() * (n - j));
+        
+          // вырезаем блок из маршрута
+          const block = array.slice(j, j + blockLength);
+        
+          // удаляем вырезанный блок из маршрута
+          array.splice(j, blockLength);
+        
+          // вставляем блок обратно на новую позицию
+          const k = Math.floor(Math.random() * (n - blockLength));
+          array.splice(k, 0, ...block);
+          
+          return array;
         }
 
         function getDistanceBetweenTwoPoint(firstPoint, secondPoint, distanceArray)

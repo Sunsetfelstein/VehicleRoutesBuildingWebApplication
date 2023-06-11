@@ -26,19 +26,20 @@ public class HomeController : Controller
     {
         var clients = await _context.Clients.Include(x => x.Location).ToListAsync();
         var depots = await _context.Depots.Include(x => x.Location).ToListAsync();
-        var vehicle = await _context.Vehicles.FirstOrDefaultAsync();
+        var settings = await _context.Settings.FirstOrDefaultAsync();
         
-        var capacity = vehicle?.Capacity ?? 0;
-        var fuelConsumption = vehicle?.FuelConsumption ?? 0.0;
-        var iterations = vehicle?.Iterations ?? 0;
+        var capacity = settings?.Capacity ?? 0;
+        var fuelConsumption = settings?.FuelConsumption ?? 0.0;
+        var iterations = settings?.Iterations ?? 0;
+        var fuelCost = settings?.FuelCost ?? 0;
 
-        var points = clients.Select(client => new PointViewModel(client.Location, client.Name, client.PhoneNumber, client.ProductWeight, false, capacity, fuelConsumption, iterations)).ToList();
+        var points = clients.Select(client => new PointViewModel(client.Location, client.Name, client.PhoneNumber, client.ProductWeight, false, capacity, fuelConsumption, iterations, fuelCost)).ToList();
 
         foreach(var depot in depots)
         {
             const int zeroWeight = 0;
             var emptyPhoneNumber = string.Empty;
-            points.Add(new PointViewModel(depot.Location, depot.Name, emptyPhoneNumber, zeroWeight, true, capacity, fuelConsumption, iterations));
+            points.Add(new PointViewModel(depot.Location, depot.Name, emptyPhoneNumber, zeroWeight, true, capacity, fuelConsumption, iterations, fuelCost));
         }
 
         return View(points);

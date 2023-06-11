@@ -1,0 +1,30 @@
+﻿@model List<VehicleRoutesBuildingWebApplication.Models.Domain.Settings>
+@{
+    ViewData["Title"] = "Настройки";
+}
+
+<h1>Настройки</h1>
+
+<table class="table">
+    <thead>
+        <tr>           
+            <th>Грузоподъемность</th>
+            <th>Расход топлива</th>
+            <th>Стоимость 1л топлива</th>
+            <th>Количество итераций</th>
+            <th> </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var settings in Model)
+        {
+            <tr>   
+                <td>@settings.Capacity</td>
+                <td>@settings.FuelConsumption</td>
+                <td>@settings.FuelCost</td>
+                <td>@settings.Iterations</td>
+                <td> <a href="Settings/Change" style="color: white;">Изменить</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
